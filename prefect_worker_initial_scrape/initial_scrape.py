@@ -25,7 +25,7 @@ def get_random_headers() -> Dict[str, str]:
     }
 
 
-@task
+@task(retries=5, retry_delay_seconds=30)
 def get_pages_count(property_type: str) -> int:# -> Any:# -> Any:
     url = f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page=1'
     r = httpx.get(url, headers=get_random_headers())
@@ -34,7 +34,7 @@ def get_pages_count(property_type: str) -> int:# -> Any:# -> Any:
     json_data = json.loads(script_tag.text) # type: ignore
     return json_data['props']['pageProps']['data']['searchAds']['pagination']['totalPages']
 
-@task
+@task(retries=5, retry_delay_seconds=30)
 def process_data(content: str, seen_investments: Set, logger: logging.Logger):
     soup = BeautifulSoup(content, 'html.parser')
     script_tag = soup.find('script', attrs={'id': '__NEXT_DATA__'})
@@ -64,7 +64,7 @@ def process_data(content: str, seen_investments: Set, logger: logging.Logger):
     except Exception as e:
         logger.error(f"Failed to process data: {e}")
 
-@flow(retries=5, retry_delay_seconds=30)
+@flow
 def perform_initial_scrape(property_type: str):
     logger = get_run_logger()
     seen_investments = set()
