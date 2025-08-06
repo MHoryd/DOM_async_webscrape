@@ -1,0 +1,14 @@
+deployments:
+  - name: initial_scrape_dom
+    entrypoint: prefect_worker_initial_scrape/initial_scrape.py:perform_initial_scrape
+    schedule: null
+    work_pool:
+      name: initial-scrape
+    parameters:
+      property_type: dom
+    description: Initial webscrape flow which get pass the stream of urls for more detailed \
+      webscrape to other flows.
+    pull:
+      - prefect.deployments.steps.git_clone:
+          repository: https://github.com/MHoryd/DOM_async_webscrape
+          branch: main
