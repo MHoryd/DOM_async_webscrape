@@ -1,7 +1,9 @@
 import random
 import json
 import httpx
-from typing import Dict
+import time
+import logging
+from typing import Dict, Set
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
 
@@ -32,9 +34,48 @@ def get_pages_count(property_type: str) -> int:# -> Any:# -> Any:
     json_data = json.loads(script_tag.text) # type: ignore
     return json_data['props']['pageProps']['data']['searchAds']['pagination']['totalPages']
 
+@task
+def process_data(content: str, seen_investments: Set, logger: logging.Logger):
+    soup = BeautifulSoup(content, 'html.parser')
+    script_tag = soup.find('script', attrs={'id': '__NEXT_DATA__'})
+    if not script_tag:
+        logger.warning("No data script found. Sleeep for 20s")
+        time.sleep(20)
+        return
+    try:
+        json_data = json.loads(script_tag.text)
+        offers_list = json_data['props']['pageProps']['data']['searchAds']['items']
+        for item in offers_list:
+            offer_type = item.get('estate')
+            offer_url = item.get('href')
+            if offer_url:
+                formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
+                investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
+                if offer_type == 'HOUSE':
+                    # testing
+                    logger.info("Trigger HOUSE deployment")
+                elif offer_type == 'FLAT':
+                    # testing
+                    logger.info("Trigger FLAT deployment")
+                elif offer_type == 'INVESTMENT' and investment_url not in seen_investments:
+                    # testing
+                    logger.info("Trigger INVESTMENT deployment")
+
+    except Exception as e:
+        logger.error(f"Failed to process data: {e}")
+
 @flow(retries=5, retry_delay_seconds=30)
 def perform_initial_scrape(property_type: str):
     logger = get_run_logger()
-    seen_investment = set()
+    seen_investments = set()
     total_pages_num = get_pages_count(property_type=property_type)
     logger.info(f"Found {total_pages_num} pages for {property_type}")
+    for i in range(1, total_pages_num + 1):
+        url = f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page={i}'
+        logger.info(f"Fetching page {i}: {url}")
+        try:
+            response = httpx.get(url, headers=get_random_headers(), timeout=10)
+            process_data(response.text, seen_investments, logger=logger) # type: ignore
+            time.sleep(random.uniform(5, 10))
+        except Exception as e:
+            logger.error(f"Error fetching {url}: {e}")
