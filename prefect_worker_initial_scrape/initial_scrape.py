@@ -2,7 +2,7 @@ import random
 import json
 import httpx
 import time
-import logging
+import asyncio
 from typing import Dict, Set
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
@@ -66,7 +66,7 @@ def process_data(content: str, seen_investments: Set, logger: logging.Logger):
         logger.error(f"Failed to process data: {e}")
 
 @flow(log_prints=True)
-def perform_initial_scrape(property_type: str):
+async def perform_initial_scrape(property_type: str):
     logger = get_run_logger()
     seen_investments = set()
     total_pages_num = get_pages_count(property_type=property_type)
@@ -77,6 +77,6 @@ def perform_initial_scrape(property_type: str):
         try:
             response = httpx.get(url, headers=get_random_headers(), timeout=10)
             process_data(response.text, seen_investments, logger=logger) # type: ignore
-            time.sleep(random.uniform(5, 10))
+            await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
