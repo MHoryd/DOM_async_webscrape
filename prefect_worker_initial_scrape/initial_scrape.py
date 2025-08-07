@@ -38,6 +38,7 @@ async def get_pages_count(property_type: str) -> int:
     json_data = json.loads(script_tag.text) # type: ignore
     return json_data['props']['pageProps']['data']['searchAds']['pagination']['totalPages']
 
+
 @task(retries=5, retry_delay_seconds=30, log_prints=True)
 async def process_data(content: str, seen_investments: Set, logger: logging.Logger):
     soup = BeautifulSoup(content, 'html.parser')
@@ -56,9 +57,11 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
                 if offer_type == 'HOUSE':
-                    flow_run = run_deployment('perform-scrape-of-offer-details/details_scrape',
-                                        parameters={"offer_url": formatted_url})
-                    logger.info(f"Triggered flow run: {flow_run.id}")
+                    flow_run = await run_deployment('perform-scrape-of-offer-details/details_scrape',
+                                        parameters={"offer_url": formatted_url},
+                                        timeout=0,
+                                        as_subflow=False)
+                    logger.info(f"Triggered flow run {flow_run}")
                 elif offer_type == 'FLAT':
                     # testing
                     logger.info("Trigger FLAT deployment")
