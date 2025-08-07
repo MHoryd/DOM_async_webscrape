@@ -56,8 +56,9 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
                 if offer_type == 'HOUSE':
-                    run_deployment('perform-scrape-of-offer-details/details_scrape',
+                    flow_run = run_deployment('perform-scrape-of-offer-details/details_scrape',
                                         parameters={"offer_url": formatted_url})
+                    logger.info(f"Triggered flow run: {flow_run.id}")
                 elif offer_type == 'FLAT':
                     # testing
                     logger.info("Trigger FLAT deployment")
