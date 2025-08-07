@@ -19,7 +19,7 @@ USER_AGENTS = [
 
 
 @task
-def get_random_headers() -> Dict[str, str]:
+async def get_random_headers():
     return {
         'user-agent': random.choice(USER_AGENTS),
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -28,21 +28,23 @@ def get_random_headers() -> Dict[str, str]:
 
 
 @task(retries=5, retry_delay_seconds=30, log_prints=True)
-def get_pages_count(property_type: str) -> int:# -> Any:# -> Any:
-    url = f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page=1'
-    r = httpx.get(url, headers=get_random_headers())
+async def get_pages_count(property_type: str) -> int:
+    headers = await get_random_headers()
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page=1',
+                             headers=headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     script_tag = soup.find('script', attrs={'id': '__NEXT_DATA__'})
     json_data = json.loads(script_tag.text) # type: ignore
     return json_data['props']['pageProps']['data']['searchAds']['pagination']['totalPages']
 
 @task(retries=5, retry_delay_seconds=30, log_prints=True)
-def process_data(content: str, seen_investments: Set, logger: logging.Logger):
+async def process_data(content: str, seen_investments: Set, logger: logging.Logger):
     soup = BeautifulSoup(content, 'html.parser')
     script_tag = soup.find('script', attrs={'id': '__NEXT_DATA__'})
     if not script_tag:
         logger.warning("No data script found. Sleep for 20s")
-        time.sleep(20)
+        await asyncio.sleep(20)
         return
     try:
         json_data = json.loads(script_tag.text)
@@ -68,16 +70,18 @@ def process_data(content: str, seen_investments: Set, logger: logging.Logger):
 
 @flow(log_prints=True)
 async def perform_initial_scrape(property_type: str):
+    headers = await get_random_headers()
     logger = get_run_logger()
     seen_investments = set()
-    total_pages_num = get_pages_count(property_type=property_type)
+    total_pages_num = await get_pages_count(property_type=property_type)
     logger.info(f"Found {total_pages_num} pages for {property_type}")
     for i in range(1, total_pages_num + 1):
         url = f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page={i}'
         logger.info(f"Fetching page {i}: {url}")
         try:
-            response = httpx.get(url, headers=get_random_headers(), timeout=10)
-            process_data(response.text, seen_investments, logger=logger) # type: ignore
+            async with httpx.AsyncClient() as client:
+                response =client.get(url=url, headers=headers, timeout=10)
+            await process_data(response.text, seen_investments, logger=logger) # type: ignore
             await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
