@@ -85,3 +85,4 @@ async def perform_initial_scrape(property_type: str):
             await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
+        await asyncio.sleep(1)
