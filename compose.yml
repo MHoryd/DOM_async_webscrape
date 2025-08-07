@@ -73,6 +73,17 @@ services:
       PREFECT_API_URL: http://prefect-server:4200/api
     command:
       prefect worker start --pool detailed-scrape
+
+  prefect-worker-investment-scrape:
+    build:
+      context: ./prefect_worker_detailed_scrape
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+    command:
+      prefect worker start --pool investment-scrape
 volumes:
   postgres_data:
   redis_data:

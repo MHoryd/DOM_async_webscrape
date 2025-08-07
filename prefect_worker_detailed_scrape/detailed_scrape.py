@@ -29,7 +29,10 @@ def fetch_url_content(url: str):
     raw_response = httpx.get(url, headers=get_random_headers())
     soup = BeautifulSoup(raw_response.text, "html.parser")
     data = soup.find("script", id="__NEXT_DATA__")
-    payload: Dict[str, Union[str, int]] = json.loads(data.text)["props"]["pageProps"]["ad"]  # type: ignore
+    try:
+        payload: Dict[str, Union[str, int]] = json.loads(data.text)["props"]["pageProps"]["ad"]  # type: ignore
+    except KeyError:
+        return False
     return payload
 
 
@@ -37,4 +40,5 @@ def fetch_url_content(url: str):
 def perform_scrape_of_offer_details(offer_url: str):
     logger = get_run_logger()
     json_data = fetch_url_content(url=offer_url)
-    logger.info(f"Fetched json data len: {len(json_data)}")
+    if json_data:
+        logger.info(f"Fetched json data len: {len(json_data)}")
