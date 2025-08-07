@@ -1,10 +1,9 @@
 import random
 import json
 import httpx
-import time
 import asyncio
 import logging
-from typing import Dict, Set
+from typing import Set
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
 from prefect.deployments import run_deployment
@@ -56,15 +55,11 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
             if offer_url:
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
-                if offer_type == 'HOUSE':
-                    flow_run = await run_deployment('perform-scrape-of-offer-details/details_scrape',
+                if offer_type in ('HOUSE','FLAT'):
+                    await run_deployment('perform-scrape-of-offer-details/details_scrape',
                                         parameters={"offer_url": formatted_url},
                                         timeout=0,
-                                        as_subflow=False)
-                    logger.info(f"Triggered flow run {flow_run}")
-                elif offer_type == 'FLAT':
-                    # testing
-                    logger.info("Trigger FLAT deployment")
+                                        as_subflow=False) # type: ignore
                 elif offer_type == 'INVESTMENT' and investment_url not in seen_investments:
                     # testing
                     logger.info("Trigger INVESTMENT deployment")
@@ -84,7 +79,7 @@ async def perform_initial_scrape(property_type: str):
         logger.info(f"Fetching page {i}: {url}")
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(url=url, headers=headers, timeout=10)
+                response = await client.get(url=url, headers=headers, timeout=10, follow_redirects=True)
             await process_data(response.text, seen_investments, logger=logger) # type: ignore
             await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
