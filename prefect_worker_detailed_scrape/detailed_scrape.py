@@ -31,7 +31,7 @@ def fetch_url_content(url: str):
     return payload
 
 
-@flow
+@flow(log_prints=True)
 def perform_scrape_of_offer_details(offer_url: str):
     logger = get_run_logger()
     json_data = fetch_url_content(url=offer_url)
