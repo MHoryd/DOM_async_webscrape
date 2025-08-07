@@ -6,6 +6,7 @@ import logging
 from typing import Dict, Set
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
+from prefect.deployments import run_deployment
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -52,8 +53,8 @@ def process_data(content: str, seen_investments: Set, logger: logging.Logger):
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
                 if offer_type == 'HOUSE':
-                    # testing
-                    logger.info("Trigger HOUSE deployment")
+                    run_deployment('details_scrape',
+                                   parameters={"offer_url":formatted_url})
                 elif offer_type == 'FLAT':
                     # testing
                     logger.info("Trigger FLAT deployment")
