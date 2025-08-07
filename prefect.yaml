@@ -43,7 +43,7 @@ deployments:
     entrypoint: refect_worker_investment_scrape/investment_scrape.py:perform_scrape_of_offer_details
     schedule: null
     work_pool:
-      name: detailed-scrape
+      name: investment-scrape
     parameters: {}
     description: Flow which is scraping the investment offers using playwright, because http endpoint return only 6 first offers.
     concurrency_limit:
