@@ -25,3 +25,17 @@ deployments:
       - prefect.deployments.steps.git_clone:
           repository: https://github.com/MHoryd/DOM_async_webscrape
           branch: main
+  - name: details_scrape
+    entrypoint: prefect_worker_detailed_scrape/detailed_scrape.py:perform_scrape_of_offer_details
+    schedule: null
+    work_pool:
+      name: detailed-scrape
+    parameters: {}
+    description: Flow which is scraping the details from single offer page
+    concurrency_limit:
+      limit: 10
+      collision_strategy: ENQUEUE
+    pull:
+      - prefect.deployments.steps.git_clone:
+          repository: https://github.com/MHoryd/DOM_async_webscrape
+          branch: main
