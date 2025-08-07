@@ -53,7 +53,7 @@ def process_data(content: str, seen_investments: Set, logger: logging.Logger):
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
                 if offer_type == 'HOUSE':
-                    run_deployment('details_scrape',
+                    run_deployment('perform_scrape_of_offer_details/details_scrape',
                                    parameters={"offer_url":formatted_url})
                 elif offer_type == 'FLAT':
                     # testing
