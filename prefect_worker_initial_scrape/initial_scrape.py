@@ -3,6 +3,7 @@ import json
 import httpx
 import time
 import asyncio
+import logging
 from typing import Dict, Set
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
