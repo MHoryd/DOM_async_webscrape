@@ -56,8 +56,8 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
                 formatted_url = offer_url.replace('[lang]/ad', 'https://www.otodom.pl/pl/oferta').replace('hpr/', '')
                 investment_url = 'https://www.otodom.pl/pl/oferta/' + item.get('slug').replace('hpr/', '')
                 if offer_type == 'HOUSE':
-                    run_deployment('perform_scrape_of_offer_details/details_scrape',
-                                   parameters={"offer_url":formatted_url})
+                    await run_deployment('perform_scrape_of_offer_details/details_scrape',
+                                        parameters={"offer_url": formatted_url})
                 elif offer_type == 'FLAT':
                     # testing
                     logger.info("Trigger FLAT deployment")
@@ -70,12 +70,12 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
 
 @flow(log_prints=True)
 async def perform_initial_scrape(property_type: str):
-    headers = await get_random_headers()
     logger = get_run_logger()
     seen_investments = set()
     total_pages_num = await get_pages_count(property_type=property_type)
     logger.info(f"Found {total_pages_num} pages for {property_type}")
     for i in range(1, total_pages_num + 1):
+        headers = await get_random_headers()
         url = f'https://www.otodom.pl/pl/wyniki/sprzedaz/{property_type}/cala-polska?page={i}'
         logger.info(f"Fetching page {i}: {url}")
         try:
