@@ -9,7 +9,7 @@ HEADERS = {
 
 
 @flow(log_prints=True)
-def handle_url(start_url):
+def handle_url(start_url: str):
     logger = get_run_logger()
     logger.info(f"Processing URL: {start_url}")
     with sync_playwright() as p:
