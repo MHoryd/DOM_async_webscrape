@@ -80,7 +80,7 @@ async def perform_initial_scrape(property_type: str):
         logger.info(f"Fetching page {i}: {url}")
         try:
             async with httpx.AsyncClient() as client:
-                response =client.get(url=url, headers=headers, timeout=10)
+                response = await client.get(url=url, headers=headers, timeout=10)
             await process_data(response.text, seen_investments, logger=logger) # type: ignore
             await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
