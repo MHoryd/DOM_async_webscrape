@@ -100,6 +100,7 @@ async def perform_initial_scrape(property_type: str, limit_page_to_process: Unio
                 response = await client.get(
                     url=url, headers=headers, timeout=10, follow_redirects=True
                 )
+                response.raise_for_status()
             await process_data(response.text, seen_investments, logger=logger)  # type: ignore
             await asyncio.sleep(random.uniform(5, 10))
         except Exception as e:
