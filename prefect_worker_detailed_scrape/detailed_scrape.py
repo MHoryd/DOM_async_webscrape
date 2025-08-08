@@ -1,5 +1,6 @@
 import random
 import json
+from logging import Logger
 from typing import Dict
 import httpx
 from prefect import flow, task, get_run_logger
@@ -25,13 +26,14 @@ def get_random_headers() -> Dict[str, str]:
 
 
 @task(retries=3, retry_delay_seconds=40)
-def fetch_url_content(url: str):
+def fetch_url_content(url: str, logger: Logger):
     raw_response = httpx.get(url, headers=get_random_headers())
     soup = BeautifulSoup(raw_response.text, "html.parser")
     data = soup.find("script", id="__NEXT_DATA__")
     try:
         payload: Dict[str, Union[str, int]] = json.loads(data.text)["props"]["pageProps"]["ad"]  # type: ignore
     except KeyError:
+        logger.error(msg=f"Failed to extract data for raw: {data.text}")
         return False
     return payload
 
@@ -39,6 +41,9 @@ def fetch_url_content(url: str):
 @flow(log_prints=True)
 def perform_scrape_of_offer_details(offer_url: str):
     logger = get_run_logger()
-    json_data = fetch_url_content(url=offer_url)
+    json_data = fetch_url_content(url=offer_url, logger=logger)
     if json_data:
-        logger.info(f"Fetched json data len: {len(json_data)}")
+        run_deployment(name="prefect-worker-process-scrape-results/process_and_upload_to_bucket"
+                    as_subflow=False,
+                    timeout=0,
+                    parameters={'dict_object':json_data})
