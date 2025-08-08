@@ -75,18 +75,20 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
                     and investment_url not in seen_investments
                 ):
                     await run_deployment(
-                        name='refect_worker_investment_scrape/handle_url',
-                        parameters={'start_url':investment_url},
+                        name="refect_worker_investment_scrape/handle_url",
+                        parameters={"start_url": investment_url},
                         timeout=0,
-                        as_subflow=False
-                    ) # type: ignore
+                        as_subflow=False,
+                    )  # type: ignore
 
     except Exception as e:
         logger.error(f"Failed to process data: {e}")
 
 
 @flow(log_prints=True)
-async def perform_initial_scrape(property_type: str, limit_page_to_process: Union[int, None] = None):
+async def perform_initial_scrape(
+    property_type: str, limit_page_to_process: Union[int, None] = None
+):
     logger = get_run_logger()
     seen_investments = set()
     total_pages_num = await get_pages_count(property_type=property_type)

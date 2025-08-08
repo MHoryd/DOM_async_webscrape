@@ -44,7 +44,9 @@ def perform_scrape_of_offer_details(offer_url: str):
     logger = get_run_logger()
     json_data = fetch_url_content(url=offer_url, logger=logger)
     if json_data:
-        run_deployment(name="extract-data-from-dict-object-and-store-it-in-bucket/process_and_upload_to_bucket",
-                    as_subflow=False,
-                    timeout=0,
-                    parameters={'dict_object':json_data})
+        run_deployment(
+            name="extract-data-from-dict-object-and-store-it-in-bucket/process_and_upload_to_bucket",
+            as_subflow=False,
+            timeout=0,
+            parameters={"dict_object": json_data},
+        )
