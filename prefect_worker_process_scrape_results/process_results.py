@@ -18,7 +18,7 @@ OCI_NAMESPACE = os.environ.get('OCI_NAMESPACE')
 oci_config = {
     "user": OCI_USER,
     "fingerprint": OCI_FINGERPRINT,
-    "key_file": ".\\oci_api_key.pem",
+    "key_file": "./app/oci_api_key.pem",
     "tenancy": OCI_TENANCY,
     "region": OCI_REGION
 }
