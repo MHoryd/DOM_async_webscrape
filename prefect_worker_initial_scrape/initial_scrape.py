@@ -101,6 +101,7 @@ async def perform_initial_scrape(property_type: str, limit_page_to_process: Unio
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
         await asyncio.sleep(1)
-        
+
         if limit_page_to_process and limit_page_to_process == i:
+            logger.info(f"Stopping run on page num: {i} according to provided limit")
             break
