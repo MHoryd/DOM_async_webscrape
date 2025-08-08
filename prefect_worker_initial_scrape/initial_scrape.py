@@ -3,7 +3,7 @@ import json
 import httpx
 import asyncio
 import logging
-from typing import Set
+from typing import Set, Union
 from bs4 import BeautifulSoup
 from prefect import get_run_logger, task, flow
 from prefect.deployments import run_deployment
@@ -82,7 +82,7 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
 
 
 @flow(log_prints=True)
-async def perform_initial_scrape(property_type: str):
+async def perform_initial_scrape(property_type: str, limit_page_to_process: Union[int, None] = None):
     logger = get_run_logger()
     seen_investments = set()
     total_pages_num = await get_pages_count(property_type=property_type)
@@ -101,3 +101,6 @@ async def perform_initial_scrape(property_type: str):
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
         await asyncio.sleep(1)
+        
+        if limit_page_to_process and limit_page_to_process == i:
+            break
