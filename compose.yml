@@ -76,7 +76,7 @@ services:
 
   prefect-worker-investment-scrape:
     build:
-      context: ./prefect_worker_detailed_scrape
+      context: ./refect_worker_investment_scrape
     depends_on:
       prefect-server:
         condition: service_healthy
