@@ -28,6 +28,7 @@ def get_random_headers() -> Dict[str, str]:
 @task(retries=3, retry_delay_seconds=40)
 def fetch_url_content(url: str, logger: Logger):
     raw_response = httpx.get(url, headers=get_random_headers())
+    raw_response.raise_for_status()
     soup = BeautifulSoup(raw_response.text, "html.parser")
     data = soup.find("script", id="__NEXT_DATA__")
     try:
@@ -43,7 +44,7 @@ def perform_scrape_of_offer_details(offer_url: str):
     logger = get_run_logger()
     json_data = fetch_url_content(url=offer_url, logger=logger)
     if json_data:
-        run_deployment(name="prefect-worker-process-scrape-results/process_and_upload_to_bucket"
+        run_deployment(name="prefect-worker-process-scrape-results/process_and_upload_to_bucket",
                     as_subflow=False,
                     timeout=0,
                     parameters={'dict_object':json_data})
