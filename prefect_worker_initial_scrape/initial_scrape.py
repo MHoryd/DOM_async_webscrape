@@ -74,8 +74,12 @@ async def process_data(content: str, seen_investments: Set, logger: logging.Logg
                     offer_type == "INVESTMENT"
                     and investment_url not in seen_investments
                 ):
-                    # testing
-                    logger.info("Trigger INVESTMENT deployment")
+                    await run_deployment(
+                        name='refect_worker_investment_scrape/handle_url',
+                        parameters={'start_url':investment_url},
+                        timeout=0,
+                        as_subflow=False
+                    ) # type: ignore
 
     except Exception as e:
         logger.error(f"Failed to process data: {e}")
