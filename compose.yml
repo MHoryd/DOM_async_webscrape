@@ -62,6 +62,7 @@ services:
         PREFECT_API_URL: http://prefect-server:4200/api
     command:
       prefect worker start --pool initial-scrape
+    restart: on-failure
 
   prefect-worker-detailed-scrape:
     build:
@@ -73,6 +74,7 @@ services:
       PREFECT_API_URL: http://prefect-server:4200/api
     command:
       prefect worker start --pool detailed-scrape
+    restart: on-failure
 
   prefect-worker-investment-scrape:
     build:
@@ -84,6 +86,27 @@ services:
       PREFECT_API_URL: http://prefect-server:4200/api
     command:
       prefect worker start --pool investment-scrape
+    restart: on-failure
+
+  prefect-worker-process-upload-data:
+    build:
+      context: ./prefect_worker_process_scrape_results
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      OCI_USER_OCID:    ${OCI_USER_OCID}
+      OCI_FINGERPRINT:  ${OCI_FINGERPRINT}
+      OCI_TENANCY_OCID: ${OCI_TENANCY_OCID}
+      OCI_REGION:       ${OCI_REGION}
+      OCI_BUCKET_NAME:  ${OCI_BUCKET_NAME}
+      OCI_NAMESPACE:    ${OCI_NAMESPACE}
+      PREFECT_API_URL: http://prefect-server:4200/api
+    volumes:
+      - ./oci_api_key.pem:/app/oci_api_key.pem
+    command:
+      prefect worker start --pool process-scraped-data
 volumes:
   postgres_data:
   redis_data:

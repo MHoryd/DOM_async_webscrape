@@ -53,3 +53,17 @@ deployments:
       - prefect.deployments.steps.git_clone:
           repository: https://github.com/MHoryd/DOM_async_webscrape
           branch: main
+  - name: process_and_upload_to_bucket
+    entrypoint: prefect_worker_process_scrape_results/process_results.py:extract_data_from_dict_object_and_store_it_in_bucket
+    schedule: null
+    work_pool:
+      name: process-scraped-data
+    parameters: {}
+    description: Flow which collect subset of data from raw scraped data and save it as json file in bucket
+    concurrency_limit:
+      limit: 10
+      collision_strategy: ENQUEUE
+    pull:
+      - prefect.deployments.steps.git_clone:
+          repository: https://github.com/MHoryd/DOM_async_webscrape
+          branch: main
