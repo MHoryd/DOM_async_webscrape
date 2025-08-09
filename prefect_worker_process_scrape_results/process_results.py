@@ -162,6 +162,12 @@ def extract_data_from_dictobject(raw_dict_object):
     else:
         featuresByCategory_df = pl.DataFrame()
     new_df = pl.concat([df, featuresByCategory_df], how="horizontal")
+    new_df = new_df.with_columns(
+        pl.when(pl.col("price") == "")
+        .then(pl.lit("0"))
+        .otherwise(pl.col("price"))
+        .alias("price")
+    )
     new_df = new_df.cast(
         {
             "price": pl.Float64,
